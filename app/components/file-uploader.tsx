@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { uploadFile } from '../actions/upload'
+import { ScaleLoader } from 'react-spinners' // Import the spinner
 import { useDropzone } from 'react-dropzone'
 import { Card, CardContent } from '@/components/ui/card'
 import { Upload, Check, Copy } from 'lucide-react'
@@ -87,9 +88,9 @@ export default function FileUploader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='text-center py-4'
+              className='text-center py-4 mt-5'
             >
-              <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto'></div>
+              <ScaleLoader color={'#6b7280'} className='mx-auto' /> {/* Better-looking spinner */}
               <p className='mt-2 text-sm text-gray-600'>Uploading...</p>
             </motion.div>
           )}

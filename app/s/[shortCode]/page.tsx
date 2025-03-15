@@ -46,7 +46,7 @@ export default async function ShortLinkRedirect({ params }: { params: { shortCod
   }
 
   // Create the view URL instead of redirecting directly to the file
-  const viewUrl = `/view?url=${encodeURIComponent(shortLink.longUrl)}`
+  const viewUrl = `/view?url=${encodeURIComponent(shortLink.longUrl)}&shortCode=${shortCode}`
   
   console.log('Redirecting to view page:', viewUrl)
   

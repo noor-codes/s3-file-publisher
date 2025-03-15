@@ -13,6 +13,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang='en'>
+      <script
+        defer
+        src='https://analytics.ramaki.app/script.js'
+        data-website-id={process.env.NEXT_PUBLIC_ANALYTICS_ID}
+      ></script>
       <body className={inter.className}>
         {children}
         <Toaster position='bottom-left' />

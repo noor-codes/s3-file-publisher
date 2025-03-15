@@ -1,7 +1,8 @@
-import prisma from '@/app/lib/prisma'
-
-import { nanoid } from 'nanoid'
 import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/app/lib/prisma'
+import { nanoid } from 'nanoid'
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,13 +28,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const shortUrl = `${request.nextUrl.origin}/s/${shortLink.shortCode}`;
-    
+    // Use BASE_URL if available, otherwise fall back to request.nextUrl.origin
+    const baseUrl = BASE_URL || request.nextUrl.origin
+    const shortUrl = `${baseUrl}/s/${shortLink.shortCode}`
+
     console.log('Created shortlink:', {
       id: shortLink.id,
       shortCode: shortLink.shortCode,
-      shortUrl: shortUrl
-    });
+      shortUrl: shortUrl,
+    })
 
     return NextResponse.json({
       success: true,

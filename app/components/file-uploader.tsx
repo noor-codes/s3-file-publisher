@@ -1,16 +1,17 @@
 'use client'
 
+import Link from 'next/link'
+
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { uploadFile } from '../actions/upload'
-import { ScaleLoader } from 'react-spinners' // Import the spinner
+import { ScaleLoader } from 'react-spinners'
 import { useDropzone } from 'react-dropzone'
 import { Card, CardContent } from '@/components/ui/card'
-import { Upload, Check, Copy, Eye, Link as LinkIcon } from 'lucide-react'
-import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
+import { useState, useCallback, useEffect } from 'react'
+import { Check, Copy, Eye, Link as LinkIcon, FileUp, RefreshCw } from 'lucide-react'
 
 export default function FileUploader() {
   const [fileUrl, setFileUrl] = useState<string | null>(null)
@@ -93,8 +94,8 @@ export default function FileUploader() {
   }
 
   return (
-    <Card className='w-full max-w-xl mx-auto'>
-      <CardContent className='p-6'>
+    <Card className='w-full max-w-xl mx-auto shadow-sm border border-gray-200 rounded-xl overflow-hidden'>
+      <CardContent className='p-8'>
         <AnimatePresence mode='wait'>
           {!fileUrl && (
             <motion.div
@@ -106,19 +107,18 @@ export default function FileUploader() {
             >
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300'
+                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all hover:bg-gray-50 ${
+                  isDragActive ? 'border-primary bg-primary/10 scale-[0.98]' : 'border-gray-300'
                 }`}
               >
                 <input {...getInputProps()} />
-                <Upload className='mx-auto h-12 w-12 text-gray-400' />
-                <p className='mt-2 text-sm text-gray-600'>
-                  Drag and drop a file here, or click to select a file
-                </p>
+                <div className='bg-gray-50 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center'>
+                  <FileUp className='h-10 w-10 text-gray-500' />
+                </div>
+                <h3 className='text-lg font-medium mb-2'>Upload your file</h3>
+                <p className='text-sm text-gray-600 mb-2'>Drag and drop a file here, or click to select</p>
+                <p className='text-xs text-gray-500'>Recommended for files larger than 10 MB</p>
               </div>
-              <span className='flex items-center justify-center mt-4 text-[12px] text-gray-500'>
-                Recommended for files larger than 10 MB.
-              </span>
             </motion.div>
           )}
 
@@ -128,10 +128,11 @@ export default function FileUploader() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='text-center py-4 mt-5'
+              className='text-center py-10'
             >
-              <ScaleLoader color={'#6b7280'} className='mx-auto' /> {/* Better-looking spinner */}
-              <p className='mt-2 text-sm text-gray-600'>Uploading...</p>
+              <ScaleLoader color={'#6b7280'} className='mx-auto' />
+              <p className='mt-4 text-sm text-gray-600'>Uploading your file...</p>
+              <p className='mt-1 text-xs text-gray-500'>This may take a moment for larger files</p>
             </motion.div>
           )}
 
@@ -141,58 +142,75 @@ export default function FileUploader() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className='space-y-4'
+              className='space-y-6'
             >
-              <div className='flex items-center space-x-2'>
-                <Check className='text-green-500' />
-                <p className='text-sm text-gray-600'>File uploaded successfully!</p>
-                <div className='flex-grow'></div>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center'>
+                  <div className='bg-green-50 rounded-full p-2 mr-3'>
+                    <Check className='text-green-500 h-5 w-5' />
+                  </div>
+                  <div>
+                    <h3 className='font-medium'>File uploaded successfully!</h3>
+                    <p className='text-xs text-gray-500'>Your file is ready to share</p>
+                  </div>
+                </div>
                 <Button
-                  variant='default'
+                  variant='outline'
                   size='sm'
                   onClick={resetUpload}
-                  className='bg-black hover:bg-gray-800'
+                  className='flex items-center gap-1 hover:bg-gray-50'
                 >
-                  Upload
+                  <RefreshCw className='h-3.5 w-3.5' />
+                  <span>New Upload</span>
                 </Button>
               </div>
 
-              <div className='space-y-2'>
-                <p className='text-xs text-gray-500 font-medium'>Direct File URL:</p>
-                <div className='flex items-center space-x-2'>
-                  <Input value={fileUrl} readOnly className='flex-grow' />
-                  <Button onClick={copyToClipboard} size='icon' title='Copy direct URL'>
-                    <Copy className='h-4 w-4' />
-                  </Button>
+              <div className='space-y-5 bg-gray-50 p-4 rounded-lg'>
+                <div className='space-y-2'>
+                  <p className='text-xs text-gray-500 font-medium'>Direct File URL:</p>
+                  <div className='flex items-center space-x-2'>
+                    <Input value={fileUrl} readOnly className='flex-grow text-sm bg-white' />
+                    <Button
+                      onClick={copyToClipboard}
+                      size='icon'
+                      title='Copy direct URL'
+                      className='bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                    >
+                      <Copy className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className='space-y-2'>
+                  <p className='text-xs text-gray-500 font-medium'>View Page URL:</p>
+                  <div className='flex items-center space-x-2'>
+                    <Input
+                      value={
+                        typeof window !== 'undefined'
+                          ? `${window.location.origin}/view?url=${encodeURIComponent(fileUrl)}`
+                          : ''
+                      }
+                      readOnly
+                      className='flex-grow text-sm bg-white'
+                    />
+                    <Button
+                      onClick={copyViewLinkToClipboard}
+                      size='icon'
+                      title='Copy view page URL'
+                      className='bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
+                    >
+                      <LinkIcon className='h-4 w-4' />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className='space-y-2'>
-                <p className='text-xs text-gray-500 font-medium'>View Page URL:</p>
-                <div className='flex items-center space-x-2'>
-                  <Input
-                    value={
-                      typeof window !== 'undefined'
-                        ? `${window.location.origin}/view?url=${encodeURIComponent(fileUrl)}`
-                        : ''
-                    }
-                    readOnly
-                    className='flex-grow'
-                  />
-                  <Button onClick={copyViewLinkToClipboard} size='icon' title='Copy view page URL'>
-                    <LinkIcon className='h-4 w-4' />
-                  </Button>
-                </div>
-              </div>
-
-              <div className='flex items-center space-x-2 mt-4'>
-                <Link href={`/view?url=${encodeURIComponent(fileUrl)}`} className='flex-grow'>
-                  <Button variant='outline' className='w-full'>
-                    <Eye className='h-4 w-4 mr-2' />
-                    View File
-                  </Button>
-                </Link>
-              </div>
+              <Link href={`/view?url=${encodeURIComponent(fileUrl)}`} className='block w-full'>
+                <Button variant='default' className='w-full'>
+                  <Eye className='h-4 w-4 mr-2' />
+                  View File
+                </Button>
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>

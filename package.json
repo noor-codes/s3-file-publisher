@@ -6,7 +6,7 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
-    "build": "next build && yarn prisma:migrate:deploy",
+    "build": "next build && yarn migration generate && yarn prisma:migrate:deploy",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:push": "prisma db push",

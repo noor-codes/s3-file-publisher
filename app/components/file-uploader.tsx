@@ -15,13 +15,19 @@ import { Check, Copy, Eye, Link as LinkIcon, FileUp, RefreshCw } from 'lucide-re
 
 export default function FileUploader() {
   const [fileUrl, setFileUrl] = useState<string | null>(null)
+  const [shortUrl, setShortUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isGeneratingShortlink, setIsGeneratingShortlink] = useState(false)
 
   // Load saved file URL from localStorage on component mount
   useEffect(() => {
     const savedFileUrl = localStorage.getItem('lastUploadedFileUrl')
+    const savedShortUrl = localStorage.getItem('lastUploadedShortUrl')
     if (savedFileUrl) {
       setFileUrl(savedFileUrl)
+    }
+    if (savedShortUrl) {
+      setShortUrl(savedShortUrl)
     }
   }, [])
 
@@ -30,7 +36,49 @@ export default function FileUploader() {
     if (fileUrl) {
       localStorage.setItem('lastUploadedFileUrl', fileUrl)
     }
-  }, [fileUrl])
+    if (shortUrl) {
+      localStorage.setItem('lastUploadedShortUrl', shortUrl)
+    }
+  }, [fileUrl, shortUrl])
+
+  const generateShortlink = async (url: string) => {
+    setIsGeneratingShortlink(true)
+    try {
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setShortUrl(data.shortUrl)
+        toast.success('Short link generated!', {
+          description: 'Your file now has a short, easy-to-share URL.',
+        })
+      } else {
+        toast.error('Failed to generate short link', {
+          description: data.error || 'Please try again later.',
+        })
+      }
+    } catch (error) {
+      console.error('Error generating short link:', error)
+      toast.error('Failed to generate short link', {
+        description: 'Please try again later.',
+      })
+    } finally {
+      setIsGeneratingShortlink(false)
+    }
+  }
+
+  // Automatically generate shortlink when fileUrl changes
+  useEffect(() => {
+    if (fileUrl && !shortUrl && !isGeneratingShortlink) {
+      generateShortlink(fileUrl);
+    }
+  }, [fileUrl, shortUrl, isGeneratingShortlink]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -42,9 +90,9 @@ export default function FileUploader() {
         const result = await uploadFile(formData)
         if (result.success) {
           setFileUrl(result.url)
-
+          
           toast.message('File uploaded successfully!', {
-            description: 'You can now share the link with others',
+            description: 'Generating a short link for you...',
           })
         }
       } catch (error) {
@@ -61,33 +109,31 @@ export default function FileUploader() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
-  const copyToClipboard = () => {
-    if (fileUrl) {
-      navigator.clipboard.writeText(fileUrl)
+  const copyToClipboard = (url: string, message: string) => {
+    navigator.clipboard.writeText(url)
 
-      toast.success('Link copied!', {
-        description: 'The file URL has been copied to your clipboard.',
-      })
-    }
+    toast.success('Link copied!', {
+      description: message,
+    })
   }
 
   const copyViewLinkToClipboard = () => {
-    if (fileUrl) {
-      // Get the current origin (protocol + hostname + port)
+    if (shortUrl) {
+      // Use the short URL if available
+      copyToClipboard(shortUrl, 'The short URL has been copied to your clipboard.')
+    } else if (fileUrl) {
+      // Fall back to the view page with the long URL if no short URL is available
       const origin = window.location.origin
       const viewUrl = `${origin}/view?url=${encodeURIComponent(fileUrl)}`
-
-      navigator.clipboard.writeText(viewUrl)
-
-      toast.success('View link copied!', {
-        description: 'The view page URL has been copied to your clipboard.',
-      })
+      copyToClipboard(viewUrl, 'The view page URL has been copied to your clipboard.')
     }
   }
 
   const resetUpload = () => {
     setFileUrl(null)
+    setShortUrl(null)
     localStorage.removeItem('lastUploadedFileUrl')
+    localStorage.removeItem('lastUploadedShortUrl')
     toast.info('Upload reset', {
       description: 'You can now upload a new file.',
     })
@@ -166,12 +212,19 @@ export default function FileUploader() {
               </div>
 
               <div className='space-y-5 bg-gray-50 p-4 rounded-lg'>
+                {isGeneratingShortlink && (
+                  <div className='py-2 flex items-center justify-center'>
+                    <ScaleLoader color={'#6b7280'} height={15} />
+                    <span className='ml-2 text-sm text-gray-500'>Generating short link...</span>
+                  </div>
+                )}
+
                 <div className='space-y-2'>
                   <p className='text-xs text-gray-500 font-medium'>Direct File URL:</p>
                   <div className='flex items-center space-x-2'>
                     <Input value={fileUrl} readOnly className='flex-grow text-sm bg-white' />
                     <Button
-                      onClick={copyToClipboard}
+                      onClick={() => copyToClipboard(fileUrl!, 'The direct URL has been copied to your clipboard.')}
                       size='icon'
                       title='Copy direct URL'
                       className='bg-white border border-gray-200 hover:bg-gray-50 text-gray-700'
@@ -185,11 +238,7 @@ export default function FileUploader() {
                   <p className='text-xs text-gray-500 font-medium'>View Page URL:</p>
                   <div className='flex items-center space-x-2'>
                     <Input
-                      value={
-                        typeof window !== 'undefined'
-                          ? `${window.location.origin}/view?url=${encodeURIComponent(fileUrl)}`
-                          : ''
-                      }
+                      value={shortUrl || (typeof window !== 'undefined' ? `${window.location.origin}/view?url=${encodeURIComponent(fileUrl!)}` : '')}
                       readOnly
                       className='flex-grow text-sm bg-white'
                     />
@@ -205,12 +254,21 @@ export default function FileUploader() {
                 </div>
               </div>
 
-              <Link href={`/view?url=${encodeURIComponent(fileUrl)}`} className='block w-full'>
-                <Button variant='default' className='w-full'>
-                  <Eye className='h-4 w-4 mr-2' />
-                  View File
-                </Button>
-              </Link>
+              {shortUrl ? (
+                <Link href={shortUrl} className='block w-full'>
+                  <Button variant='default' className='w-full'>
+                    <Eye className='h-4 w-4 mr-2' />
+                    View File
+                  </Button>
+                </Link>
+              ) : (
+                <Link href={`/view?url=${encodeURIComponent(fileUrl!)}`} className='block w-full'>
+                  <Button variant='default' className='w-full'>
+                    <Eye className='h-4 w-4 mr-2' />
+                    View File
+                  </Button>
+                </Link>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-
+import { Suspense } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -10,7 +10,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, Download, Eye, FileIcon, FileText, Play, Share2 } from 'lucide-react'
 
-export default function FileViewer() {
+function FileViewerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fileUrl = searchParams.get('url')
@@ -301,5 +301,32 @@ export default function FileViewer() {
         </Card>
       </div>
     </main>
+  )
+}
+
+export default function FileViewer() {
+  return (
+    <Suspense fallback={<LoadingUI />}>
+      <FileViewerContent />
+    </Suspense>
+  )
+}
+
+function LoadingUI() {
+  return (
+    <div className='flex min-h-screen flex-col items-center justify-center py-10 p-4 bg-gradient-to-b from-white to-gray-50'>
+      <Card className='w-full max-w-xl shadow-sm border border-gray-200 rounded-xl overflow-hidden'>
+        <CardContent className='p-8'>
+          <div className='space-y-6'>
+            <div className='flex items-center justify-between'>
+              <Skeleton className='h-10 w-24' />
+              <Skeleton className='h-8 w-40' />
+              <Skeleton className='h-10 w-24' />
+            </div>
+            <Skeleton className='h-[400px] w-full rounded-lg' />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

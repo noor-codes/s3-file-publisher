@@ -218,7 +218,7 @@ function FileViewerContent() {
               )}
 
               {fileType === 'video' && (
-                <div className='w-full h-[60vh] flex items-center justify-center relative rounded-lg bg-white'>
+                <div className='w-full h-auto min-h-[300px] max-h-[60vh] flex items-center justify-center relative rounded-lg bg-white p-4'>
                   {mediaLoading && (
                     <div className='absolute inset-0 flex items-center justify-center z-10 bg-gray-100 rounded-lg'>
                       <Skeleton className='h-full w-full absolute rounded-lg' />
@@ -231,7 +231,7 @@ function FileViewerContent() {
                     ref={videoRef}
                     src={fileUrl}
                     controls
-                    className='max-w-full max-h-full object-contain rounded-lg'
+                    className='w-full h-auto max-h-[calc(60vh-2rem)] object-contain rounded-lg'
                     onLoadedData={handleMediaLoad}
                     onError={() => {
                       setFileType('other')

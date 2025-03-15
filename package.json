@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "start": "next start",
+    "start": "npm run prisma:migrate:deploy && next start",
     "lint": "next lint",
-    "build": "next build && yarn migration generate && yarn prisma:migrate:deploy",
+    "build": "npm run prisma:migrate:deploy && next build",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:push": "prisma db push",

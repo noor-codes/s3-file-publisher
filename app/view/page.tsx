@@ -33,20 +33,19 @@ function FileViewerContent() {
     // Save the URL to localStorage for state persistence
     localStorage.setItem('lastUploadedFileUrl', fileUrl)
 
-    // Extract file name from URL
+    // Extract original file name from the S3 object key
+    // New: uploads/<uuid>/<name>  |  Legacy: uploads/<uuid>-<name>
     try {
       const url = new URL(fileUrl)
-      const pathSegments = url.pathname.split('/')
-      const fullFileName = pathSegments[pathSegments.length - 1]
-      // Remove UUID prefix if present (format: uuid-filename)
-      const nameWithoutUuid = fullFileName.includes('-')
-        ? fullFileName.substring(fullFileName.indexOf('-') + 1)
-        : fullFileName
+      const pathSegments = url.pathname.split('/').filter(Boolean)
+      const fullFileName = decodeURIComponent(pathSegments[pathSegments.length - 1] || '')
+      const uuidPrefix = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i
+      const originalName = fullFileName.replace(uuidPrefix, '')
 
-      setFileName(decodeURIComponent(nameWithoutUuid))
+      setFileName(originalName)
 
       // Determine file type based on extension
-      const extension = nameWithoutUuid.split('.').pop()?.toLowerCase() || ''
+      const extension = originalName.split('.').pop()?.toLowerCase() || ''
 
       if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) {
         setFileType('image')

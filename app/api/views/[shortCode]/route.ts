@@ -3,10 +3,10 @@ import prisma from '@/app/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { shortCode: string } }
+  { params }: { params: Promise<{ shortCode: string }> }
 ) {
   try {
-    const { shortCode } = params
+    const { shortCode } = await params
 
     // Find the short link in the database by shortCode
     let shortLink = await prisma.shortLink.findUnique({

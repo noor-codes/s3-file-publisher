@@ -1,9 +1,12 @@
 import prisma from '@/app/lib/prisma'
 import { notFound } from 'next/navigation'
 
-// Client-side component for redirection
-export default async function ShortLinkRedirect({ params }: { params: { shortCode: string } }) {
-  const { shortCode } = params
+export default async function ShortLinkRedirect({
+  params,
+}: {
+  params: Promise<{ shortCode: string }>
+}) {
+  const { shortCode } = await params
 
   console.log('Redirecting shortCode:', shortCode)
 

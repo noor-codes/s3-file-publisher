@@ -20,29 +20,43 @@ const s3Client = new S3Client({
   forcePathStyle: true,
 })
 
+function contentDisposition(filename: string, type: 'inline' | 'attachment' = 'inline') {
+  const fallback = filename.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '\\$&')
+  const encoded = encodeURIComponent(filename).replace(/['()]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
+  return `${type}; filename="${fallback}"; filename*=UTF-8''${encoded}`
+}
+
 export async function uploadFile(formData: FormData) {
   const file = formData.get('file') as File
   if (!file) {
     throw new Error('No file provided')
   }
 
+  const originalName = file.name
   const buffer = await file.arrayBuffer()
-  const fileName = `uploads/${uuidv4()}-${file.name}` // Upload to /uploads folder
+  // UUID folder keeps keys unique; final path segment is the original filename
+  // so browsers download it as e.g. "Ramaki GOC.pdf" instead of "uuid-Ramaki GOC.pdf"
+  const objectKey = `uploads/${uuidv4()}/${originalName}`
+  const disposition = contentDisposition(originalName)
 
   const putCommand = new PutObjectCommand({
     Bucket: BUCKET_NAME,
-    Key: fileName,
+    Key: objectKey,
     Body: Buffer.from(buffer),
+    ContentType: file.type || 'application/octet-stream',
+    ContentDisposition: disposition,
   })
 
   await s3Client.send(putCommand)
 
   const getCommand = new GetObjectCommand({
-    Key: fileName,
+    Key: objectKey,
     Bucket: BUCKET_NAME,
+    ResponseContentDisposition: disposition,
+    ResponseContentType: file.type || 'application/octet-stream',
   })
 
   const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 7 * 24 * 60 * 60 }) // URL valid for 7 days
 
-  return { success: true, url }
+  return { success: true, url, fileName: originalName }
 }

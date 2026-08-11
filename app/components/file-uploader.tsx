@@ -143,32 +143,7 @@ export default function FileUploader() {
     <Card className='w-full max-w-xl mx-auto shadow-sm border border-gray-200 rounded-xl overflow-hidden'>
       <CardContent className='p-8'>
         <AnimatePresence mode='wait'>
-          {!fileUrl && (
-            <motion.div
-              key='upload-area'
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all hover:bg-gray-50 ${
-                  isDragActive ? 'border-primary bg-primary/10 scale-[0.98]' : 'border-gray-300'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <div className='bg-gray-50 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center'>
-                  <FileUp className='h-10 w-10 text-gray-500' />
-                </div>
-                <h3 className='text-lg font-medium mb-2'>Upload your file</h3>
-                <p className='text-sm text-gray-600 mb-2'>Drag and drop a file here, or click to select</p>
-                <p className='text-xs text-gray-500'>Recommended for files larger than 10 MB</p>
-              </div>
-            </motion.div>
-          )}
-
-          {isUploading && (
+          {isUploading ? (
             <motion.div
               key='uploading-spinner'
               initial={{ opacity: 0 }}
@@ -180,13 +155,12 @@ export default function FileUploader() {
               <p className='mt-4 text-sm text-gray-600'>Uploading your file...</p>
               <p className='mt-1 text-xs text-gray-500'>This may take a moment for larger files</p>
             </motion.div>
-          )}
-
-          {fileUrl && (
+          ) : fileUrl ? (
             <motion.div
               key='upload-success'
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
               className='space-y-6'
             >
@@ -269,6 +243,29 @@ export default function FileUploader() {
                   </Button>
                 </Link>
               )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key='upload-area'
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all hover:bg-gray-50 ${
+                  isDragActive ? 'border-primary bg-primary/10 scale-[0.98]' : 'border-gray-300'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <div className='bg-gray-50 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center'>
+                  <FileUp className='h-10 w-10 text-gray-500' />
+                </div>
+                <h3 className='text-lg font-medium mb-2'>Upload your file</h3>
+                <p className='text-sm text-gray-600 mb-2'>Drag and drop a file here, or click to select</p>
+                <p className='text-xs text-gray-500'>Recommended for files larger than 10 MB</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
